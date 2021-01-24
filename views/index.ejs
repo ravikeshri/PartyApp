@@ -1,10 +1,11 @@
 <%- include("partials/header") %>
-<body class="profile">
+<body class="profile animate__animated animate__fadeIn">
   <header>
     <a href="/"><div class="logo"><img src="/media/logo.png" alt="logo" class="profile-icon logo-icon"></div></a>
     <div class="profile-icon">
       <img class="profile-icon" src="<%= user.image %>" >
       <div class="profile-menu">
+        <div id="profile-name"><%= user.fname %> <%= user.lname %></div>
         <div id="logout">Logout</div>
       </div>
     </div>
@@ -31,19 +32,32 @@
   <ul class="party-list" id="parties">
     <% parties.forEach(party => { %>
         <a href="/party/<%= party._id %> ">
-          <li>
-            <p class="party-name"><%= party.party_name %> </p>
-            <p class="party-date"><%= party.date.toDateString() %> </p>
-            <p class="party-contribution"><%= party.totalcontribution %> </p>
-            <p class="party-venue"><%= party.venue %> </p>
+          <li class="animate__animated animate__fadeInUp">
+            <div class="party-thumb <%= party.party_theme %>">
+              <span class="<%= party.status %>-tag"><%= party.status %></span>
+            </div>
+            <div class="party-info">
+              <p class="party-name"><%= party.party_name %> </p>
+              <div class="party-date-venue">
+                <p><%= party.date.toDateString() %> </p>
+                <p><%= party.venue %> </p>
+              </div>
+            </div>
           </li>
         </a>
-      <% }) %>
+      <% }); %>
+      <% if(!parties.length){ %>
+        <div class="empty-placeholder animate__animated animate__fadeInUp">
+          <div class="placeholder-icon"></div>
+          <h1 class="placeholder-heading">OOPS!</h1>
+          <p class="placeholder-text">Looks like there are no parties going on here.</p>
+        </div>
+      <% } %>
   </ul>
 </body>
 <!-- Overlay to create new party -->
-<div class="overlay">
-  <div class="popup">
+<div class="overlay ">
+  <div class="popup animate__animated animate__fadeInDownBig">
     <header>
       <h2>Host Party</h2>
       <div class="close-icon" onclick="popup(0)"></div>
@@ -71,8 +85,8 @@
 <!-- End of overlay to create new party -->
 
 <!-- Overlay to join other party -->
-<div class="overlay">
-  <div class="popup">
+<div class="overlay ">
+  <div class="popup animate__animated animate__fadeInDownBig">
     <header>
       <h2>Join Party</h2>
       <div class="close-icon" onclick="popup(1)"></div>
@@ -87,8 +101,8 @@
   </div>
 </div>
 <!-- End of overlay to join another party -->
+
 <script type="text/javascript" src="/js/jquery-3.4.1.min.js"></script>
-<script type="text/javascript" src="/js/indexScript.js"></script>
 <script type="text/javascript">
 $("#logout").on( "click", function(){
   window.location.href = '/users/logout';
@@ -138,17 +152,25 @@ $("#logout").on( "click", function(){
           const options = { // Ajax request
             method: 'post',
             url: output_url,
-            data: sendData
+            data: sendData,
+            async: false
           };
           // control returns here after being redirected from the backend
           $.ajax(options).done(response => {
-              // show response of party submission here.
-            $(".join-message").css({ "display" : "block", "background" : "#2ecc71" });
-            $(".join-message")[0].innerHTML = "You have been added to the party list !";
-            setTimeout(function()
-            {
-              $(location).attr('href', "/party/"+party_id);
-            },2000); // 2second delay.
+
+            // show response of party submission here.
+            if(response === "past-party") {
+              $(".join-message").css({ "display" : "block", "background" : "#f39c12" });
+              $(".join-message")[0].innerHTML = "Sorry, The party is over !";
+            } else {
+              $(".join-message").css({ "display" : "block", "background" : "#2ecc71" });
+              $(".join-message")[0].innerHTML = "You have been added to the party list !";
+              setTimeout(function()
+              {
+                $(location).attr('href', "/party/"+party_id);
+              },1000); // 1second delay.
+            }
+
           });
         }
         else {
@@ -162,5 +184,10 @@ $("#logout").on( "click", function(){
       }
   }
 });
+
+  // fetching route data
+  let all =  <%- JSON.stringify(parties) %> // store objects of all parties
+
 </script>
+<script type="text/javascript" src="/js/indexScript.js"></script>
 <%- include("partials/footer") %>

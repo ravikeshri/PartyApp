@@ -12,6 +12,16 @@ const { isLoggedIn, forwardAuthenticated } = require('../config/auth');
 // Welcome Page
 router.get('/', forwardAuthenticated, (req, res) => res.render('landing'));
 
+// function to sort parties according to date (descending order)
+function compareDate(party1, party2) {
+  if(party1.date < party2.date) 
+    return 1;
+  else if(party1.date > party2.date)
+    return -1;
+  else 
+    return 0; 
+}
+
 // Dashboard
 router.get('/dashboard', isLoggedIn, (req, res) => {
   var userParties = req.user.parties;
@@ -38,28 +48,23 @@ router.get('/dashboard', isLoggedIn, (req, res) => {
           });
         }
       });
+
+      // sort parties according to date
+      parties.sort(compareDate);
+
+      // push ongoing parties to front
+      for(var i=0; i<parties.length; i++) {
+        if(parties[i].status === "ongoing") {
+          var temp_party = parties[i];
+          parties.splice(i, 1);
+          parties.unshift(temp_party);
+        }
+      }
+
       res.render('index', {parties: parties, todayDate:date,user:req.user});
     }
   });
 });
-
-// Dashboard sort-section route to handle asynchronous toggle
-router.get('/dashboard.json', isLoggedIn, (req, res) => {
-  var userParties = req.user.parties;
-  Party.find().where('_id').in(userParties).exec((err, parties) => {
-    if (err) {
-      console.log(err);
-      res.redirect('/dashboard');
-    } else {
-      if(req.xhr) {
-        res.json(parties);
-      } else {
-        res.render('index', {parties: parties});
-      }
-    }
-  });
-});
-
 
 //------------------------------------------------------------------------------
 
